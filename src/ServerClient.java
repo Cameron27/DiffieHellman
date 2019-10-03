@@ -1,30 +1,46 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Socket;
+import java.security.SecureRandom;
+import java.util.Random;
 import java.util.Scanner;
 
 abstract class ServerClient {
     Socket socket;
     DataOutputStream out;
     DataInputStream in;
-    final int KEY_SIZE = 128;
+    int KEY_SIZE;
+    BigInteger prime;
+    BigInteger generator;
     private int writeKeyPointer = 0;
     private int readKeyPointer = 0;
-    byte[] key = new byte[KEY_SIZE];
+    byte[] key;
 
     // run app
     void run() {
         setup();
 
-        exchangeKey();
+        System.out.println("Exchanging key");
+        try {
+            exchangeKey();
+        } catch (IOException e) {
+            System.out.println("Key exchange failed");
+            Runtime.getRuntime().exit(1);
+        }
+
+
+        System.out.println("Ready to chat");
 
         startChat();
 
         try {
             socket.close();
-        } catch (IOException ignored) {
+        } catch (
+                IOException ignored) {
         }
+
     }
 
     /**
@@ -33,9 +49,50 @@ abstract class ServerClient {
     abstract void setup();
 
     /**
-     * Exchange keys with the other server / client.
+     * Exchange keys with the other server / client using Diffie Hellman.
      */
-    abstract void exchangeKey();
+    private void exchangeKey() throws IOException {
+        getPrimeAndGenerator();
+
+        Random rnd = new SecureRandom();
+
+        // pick a secret from
+        BigInteger secretExponent;
+        do {
+            secretExponent = new BigInteger(KEY_SIZE * 8, rnd);
+        } while (prime.subtract(secretExponent).signum() != 1 || secretExponent.equals(BigInteger.ZERO));
+
+        // calculate exponential
+        BigInteger numberToSend = generator.modPow(secretExponent, prime);
+
+        // get bit to send and pad them so it is a predictable length
+        byte[] bytesToSend = numberToSend.toByteArray();
+        byte[] bytesToSendPadded = new byte[KEY_SIZE + 1];
+        System.arraycopy(bytesToSend, 0, bytesToSendPadded, bytesToSendPadded.length - bytesToSend.length, bytesToSend.length);
+
+        // send data and receive data
+        byte[] bytesReceived = new byte[KEY_SIZE + 1];
+
+        out.write(bytesToSendPadded);
+        out.flush();
+
+        in.readFully(bytesReceived);
+
+
+        BigInteger numberReceived = new BigInteger(bytesReceived);
+        BigInteger keyInt = numberReceived.modPow(secretExponent, prime);
+
+        byte[] keyBytes = keyInt.toByteArray();
+
+        // calculate start point as the first byte may need to be skipped as BigInteger.toByteArray used two's two's-complement
+        int startPoint = keyBytes.length <= KEY_SIZE ? 0 : 1;
+        key = new byte[KEY_SIZE];
+        System.arraycopy(keyBytes, startPoint, key, key.length - (keyBytes.length - startPoint), keyBytes.length - startPoint);
+
+        System.out.println(Functions.bytesToHex(key, KEY_SIZE));
+    }
+
+    abstract void getPrimeAndGenerator() throws IOException;
 
     /**
      * Starts the server / client listening for data on the socket to display and for input on stdin to send.
@@ -64,7 +121,7 @@ abstract class ServerClient {
         });
         writeThread.start();
 
-        byte[] buff = new byte[256];
+        byte[] buff = new byte[16384];
         int length;
         // read from socket continuously
         while (true) {

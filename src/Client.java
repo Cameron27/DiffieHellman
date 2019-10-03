@@ -1,8 +1,8 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Socket;
-import java.util.Random;
 import java.util.Scanner;
 
 class Client extends ServerClient {
@@ -49,6 +49,7 @@ class Client extends ServerClient {
 
             // try connect to address
             try {
+                System.out.println("Waiting for connection");
                 socket = new Socket(address, port);
             } catch (IOException | IllegalArgumentException e) {
                 System.out.println("Failed to connect to that address on that port");
@@ -69,19 +70,17 @@ class Client extends ServerClient {
     }
 
     @Override
-    void exchangeKey() {
-        // generate random key
-        new Random().nextBytes(key);
+    void getPrimeAndGenerator() throws IOException {
+        // get prime number
+        KEY_SIZE = in.readInt() - 1;
+        byte[] primeBytes = new byte[KEY_SIZE + 1];
+        in.readFully(primeBytes);
+        prime = new BigInteger(primeBytes);
 
-        // send key to server
-        try {
-            out.write(key);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // print key
-        System.out.println("The chosen key is:");
-        System.out.println(Functions.bytesToHex(key, key.length));
+        // get generator
+        int generatorSize = in.readInt();
+        byte[] generatorBytes = new byte[generatorSize];
+        in.readFully(generatorBytes);
+        generator = new BigInteger(generatorBytes);
     }
 }

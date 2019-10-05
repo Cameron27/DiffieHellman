@@ -37,8 +37,7 @@ abstract class ServerClient {
 
         try {
             socket.close();
-        } catch (
-                IOException ignored) {
+        } catch (IOException ignored) {
         }
 
     }

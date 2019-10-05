@@ -49,7 +49,6 @@ class Client extends ServerClient {
 
             // try connect to address
             try {
-                System.out.println("Waiting for connection");
                 socket = new Socket(address, port);
             } catch (IOException | IllegalArgumentException e) {
                 System.out.println("Failed to connect to that address on that port");

@@ -88,7 +88,7 @@ abstract class ServerClient {
         key = new byte[KEY_SIZE];
         System.arraycopy(keyBytes, startPoint, key, key.length - (keyBytes.length - startPoint), keyBytes.length - startPoint);
 
-        System.out.println(Functions.bytesToHex(key, KEY_SIZE));
+//        System.out.println(Functions.bytesToHex(key, KEY_SIZE));
     }
 
     abstract void getPrimeAndGenerator() throws IOException;
@@ -137,11 +137,11 @@ abstract class ServerClient {
                 }
 
                 // print encrypted message
-                System.out.println(Functions.bytesToHex(buff, length));
-                System.out.println(Functions.bytesToString(buff, length));
+//                System.out.println(Functions.bytesToHex(buff, length));
+//                System.out.println(Functions.bytesToString(buff, length));
 
                 // print decrypted message
-                System.out.println(Functions.bytesToHex(line.getBytes(), length));
+//                System.out.println(Functions.bytesToHex(line.getBytes(), length));
                 System.out.print(line);
             } catch (IOException ignored) {
                 break;

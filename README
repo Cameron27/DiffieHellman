@@ -1,0 +1,4 @@
+There are two programs, Server and Client. When started Server will ask for a port to listen on (default 1000) and the
+Client will ask for a domain (default localhost) and port (default 1000). After the who have connected Diffie Hellman
+will be used to exchange a key and then you can send a message from one program to another by typing a message into
+the console and pressing enter. To stop either program send "stop".

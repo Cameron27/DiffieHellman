@@ -10,8 +10,8 @@ b2 40 6d 40 14 f4 ee 64 51 19 66 69 f1
 54 65 73 74 20 6d 65 73 73 61 67 65 0a 
 Test message
 ```
-The first line is the truncated key, the second line is the received encoded message in hexadecimal and if you take `e6251e3434998b172278010cfb xor b2406d4014f4ee6451196669f1` you get the result `54657374206d6573736167650a`, which is the decoded message on line 4, so it is encoding and decoding correctly. The decoded message correctly translates to `Test message` where as the encoded message translates to `.@m@...dQ.fi.`. As you can see the encoded message is appears scrambled with most of the bytes not event being 
-printable ascii characters.
+The first line is the key (truncated), the second line is the received encoded message in hexadecimal and if you take `e6251e3434998b172278010cfb xor b2406d4014f4ee6451196669f1` you get the result `54657374206d6573736167650a`, which is the decoded message on line 4, so it is encoding and decoding correctly. The decoded message correctly translates to `Test message` where as the encoded message translates to `.@m@...dQ.fi.`. As you can see the encoded message does appear to be scrambled with most of the bytes not event being 
+printable characters in ascii.
 
 # Part 2
 
@@ -32,6 +32,8 @@ The first line is the truncated key and is the same for the server and client, a
 
 # Security of Design
 
-Reusing primes and generators in no way compromises the security of Diffie-Hellman so the use of the primes from RFC 3526 works fine. If you were to generate your own primes it will just take longer and the best you can do is generate a number that is probably a prime (although statistical methods would give an extremely low chance of it not being a prime). Another advantage of the primes in RFC 3526 is they are save primes (i.e. `p = 2 * q + 1` where `q` is also a prime) which have additional security benefits for Diffie-Hellman but can easily take over a minute to find randomly.
+In order to make sure the key exchange is secure I use a prime of size 2048 bits as this is the recommended size to use nowadays for Diffie-Hellman. Also, a 2048 bit prime will mean a 2048 bit key at the end and the longer the key the more ciphertext you would need to crack the encryption through a frequency analysis. FOr a similar reason I use all of the key evenly, keeping tack of where the last message stopped during encryption, as if I used one part of the key more than another it would reduce the amount of ciphertext needed to start cracking parts of the key.
 
-For the choice of random exponents by the server and client, I was sure use the SecureRandom class instead of just the Random class as the Random class seeds itself using the system time, something that could be easily guessed where as SecureRandom uses random sources of data provided by the OS as well as having a few other differences that make it far better equip for generating random numbers for cryptography.
+Reusing primes and generators in no way compromises the security of Diffie-Hellman so the use of the primes from RFC 3526 works fine. If you were to generate your own primes it will just take longer and the best you can do is generate a number that is probably a prime (although the chance of it not being a prime would be extremely low). Another advantage of the primes in RFC 3526 is they are save primes (i.e. a prime of the form `2 * q + 1` where `q` is also a prime) which have additional security benefits for Diffie-Hellman but can easily take over a minute to a 2048 bit one randomly.
+
+For the choice of random exponents by the server and client, I was sure use the SecureRandom class in Java instead of just the Random class, This is because the Random class seeds itself using the system time, something that could be easily guessed, where as SecureRandom uses random sources of data provided by the OS as well as having a few other differences that make it far better equip for generating random numbers for cryptography.
